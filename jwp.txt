@@ -1,0 +1,294 @@
+============================================
+  PRIME JACKET STORE - LARAVEL SETUP GUIDE
+============================================
+
+1. REQUIREMENT
+--------------
+- PHP 8.2+
+- Composer
+- XAMPP (MySQL + Apache)
+- Node.js (opsional)
+
+2. INSTALASI AWAL
+-----------------
+cd C:\xampp\htdocs\LSP
+composer install
+composer require barryvdh/laravel-dompdf
+
+3. KONFIGURASI DATABASE
+-----------------------
+- Buka XAMPP Control Panel
+- Start Apache dan MySQL
+- Buka phpMyAdmin: http://localhost/phpmyadmin
+- Buat database: primejacketstore
+- Import file: primejacketstore.sql
+
+4. KONFIGURASI .ENV
+-------------------
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=primejacketstore
+DB_USERNAME=root
+DB_PASSWORD=
+
+5. COMMAND WAJIB SEBELUM MENJALANKAN
+-------------------------------------
+composer dump-autoload
+php artisan key:generate
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
+
+6. MENJALANKAN PROGRAM
+----------------------
+php artisan serve
+
+7. BUKA DI BROWSER
+------------------
+http://127.0.0.1:8000
+
+8. LOGIN
+--------
+Username : admin
+Password : admin123
+
+9. JIKA ADA ERROR
+-----------------
+php artisan cache:clear
+php artisan view:clear
+php artisan config:clear
+php artisan route:clear
+composer dump-autoload
+php artisan serve
+
+10. JIKA MYSQL ERROR DI XAMPP
+------------------------------
+- Buka XAMPP Control Panel
+- Stop MySQL
+- Start MySQL lagi
+- Jika masih error, restart laptop
+
+============================================
+-- ============================================
+--  PRIME JACKET STORE - DATABASE SETUP
+-- ============================================
+
+-- 1. Buat dan gunakan database
+CREATE DATABASE IF NOT EXISTS `primejacketstore`;
+USE `primejacketstore`;
+
+-- ============================================
+-- TABEL KATEGORI
+-- ============================================
+CREATE TABLE `kategori` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama_kategori` varchar(100) NOT NULL,
+  `deskripsi` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `kategori` (`nama_kategori`, `deskripsi`, `created_at`, `updated_at`) VALUES
+('Jaket Kulit', NULL, NOW(), NOW()),
+('Jaket Bomber', NULL, NOW(), NOW()),
+('Jaket Denim', NULL, NOW(), NOW()),
+('Jaket Parka', NULL, NOW(), NOW()),
+('Windbreaker', NULL, NOW(), NOW()),
+('Jaket Varsity', NULL, NOW(), NOW()),
+('Puffer Jacket', NULL, NOW(), NOW()),
+('Hoodie', NULL, NOW(), NOW());
+
+-- ============================================
+-- TABEL BARANG
+-- ============================================
+CREATE TABLE `barang` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kode_barang` varchar(20) NOT NULL,
+  `nama_barang` varchar(100) NOT NULL,
+  `kategori_id` bigint(20) UNSIGNED NOT NULL,
+  `stok_tersedia` int(11) NOT NULL DEFAULT 0,
+  `harga` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `status` enum('tersedia','habis','discontinue') NOT NULL DEFAULT 'tersedia',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `stok` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `barang_kode_barang_unique` (`kode_barang`),
+  KEY `barang_kategori_id_foreign` (`kategori_id`),
+  CONSTRAINT `barang_kategori_id_foreign` FOREIGN KEY (`kategori_id`) REFERENCES `kategori` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `barang` (`kode_barang`, `nama_barang`, `kategori_id`, `stok_tersedia`, `harga`, `status`, `created_at`, `updated_at`, `stok`) VALUES
+('JK--73',  'Jaket Bomber',      2, 20, 350000.00, 'tersedia', NOW(), NOW(), 20),
+('JK--001', 'Jaket Kulit Pria',  1, 15, 399000.00, 'tersedia', NOW(), NOW(), 15),
+('JP--008', 'Jaket Parka Hitam', 4,  7, 500000.00, 'tersedia', NOW(), NOW(),  9),
+('JD--01',  'Jaket Denim Pria',  3, 10, 299000.00, 'tersedia', NOW(), NOW(), 10),
+('JK--043', 'Jaket Kulit Hitam', 1,  5, 450000.00, 'tersedia', NOW(), NOW(),  5);
+
+-- ============================================
+-- TABEL BARANG MASUK
+-- ============================================
+CREATE TABLE `barang_masuk` (
+  `id_masuk` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `barang_id` bigint(20) UNSIGNED NOT NULL,
+  `jumlah` int(11) NOT NULL,
+  `tanggal` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_masuk`),
+  KEY `fk_barang_masuk` (`barang_id`),
+  CONSTRAINT `fk_barang_masuk` FOREIGN KEY (`barang_id`) REFERENCES `barang` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `barang_masuk` (`barang_id`, `jumlah`, `tanggal`) VALUES
+(1, 5,  '2026-06-06 00:00:00'),
+(3, 5,  '2026-05-31 00:00:00'),
+(3, 15, '2026-05-31 00:00:00');
+
+-- ============================================
+-- TABEL BARANG KELUAR
+-- ============================================
+CREATE TABLE `barang_keluar` (
+  `id_keluar` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `barang_id` bigint(20) UNSIGNED NOT NULL,
+  `jumlah` int(11) NOT NULL,
+  `tanggal` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_keluar`),
+  KEY `fk_barang_keluar` (`barang_id`),
+  CONSTRAINT `fk_barang_keluar` FOREIGN KEY (`barang_id`) REFERENCES `barang` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `barang_keluar` (`barang_id`, `jumlah`, `tanggal`) VALUES
+(1, 5,  '2026-06-06 00:00:00'),
+(3, 2,  '2026-05-03 00:00:00'),
+(3, 6,  '2026-06-01 00:00:00'),
+(3, 10, '2026-06-04 00:00:00');
+
+-- ============================================
+-- TABEL USERS
+-- ============================================
+CREATE TABLE `users` (
+  `id_user` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `level` enum('admin','staff') NOT NULL DEFAULT 'staff',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_user`),
+  UNIQUE KEY `users_username_unique` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Password: admin123
+INSERT INTO `users` (`nama`, `username`, `password`, `level`) VALUES
+('Administrator', 'admin', '$2y$12$q7vIIL7jiydSjqlMj1OxEu9epQ47rWlykJwAJ7Xk1PsSWd0C6qBbu', 'admin');
+
+-- ============================================
+-- TABEL MIGRATIONS
+-- ============================================
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `migrations` (`migration`, `batch`) VALUES
+('0001_01_01_000000_create_users_table', 1),
+('0001_01_01_000001_create_cache_table', 1),
+('0001_01_01_000002_create_jobs_table', 1);
+
+================================================
+-- ============================================
+--  PRIME JACKET STORE - DATABASE SETUP
+-- ============================================
+
+-- 1. Buat dan gunakan database
+CREATE DATABASE IF NOT EXISTS `primejacketstore`;
+USE `primejacketstore`;
+
+-- ============================================
+-- TABEL KATEGORI
+-- ============================================
+CREATE TABLE `kategori` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama_kategori` varchar(100) NOT NULL,
+  `deskripsi` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABEL BARANG
+-- ============================================
+CREATE TABLE `barang` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kode_barang` varchar(20) NOT NULL,
+  `nama_barang` varchar(100) NOT NULL,
+  `kategori_id` bigint(20) UNSIGNED NOT NULL,
+  `stok_tersedia` int(11) NOT NULL DEFAULT 0,
+  `harga` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `status` enum('tersedia','habis','discontinue') NOT NULL DEFAULT 'tersedia',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `stok` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `barang_kode_barang_unique` (`kode_barang`),
+  KEY `barang_kategori_id_foreign` (`kategori_id`),
+  CONSTRAINT `barang_kategori_id_foreign` FOREIGN KEY (`kategori_id`) REFERENCES `kategori` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABEL BARANG MASUK
+-- ============================================
+CREATE TABLE `barang_masuk` (
+  `id_masuk` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `barang_id` bigint(20) UNSIGNED NOT NULL,
+  `jumlah` int(11) NOT NULL,
+  `tanggal` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_masuk`),
+  KEY `fk_barang_masuk` (`barang_id`),
+  CONSTRAINT `fk_barang_masuk` FOREIGN KEY (`barang_id`) REFERENCES `barang` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================
+-- TABEL BARANG KELUAR
+-- ============================================
+CREATE TABLE `barang_keluar` (
+  `id_keluar` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `barang_id` bigint(20) UNSIGNED NOT NULL,
+  `jumlah` int(11) NOT NULL,
+  `tanggal` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_keluar`),
+  KEY `fk_barang_keluar` (`barang_id`),
+  CONSTRAINT `fk_barang_keluar` FOREIGN KEY (`barang_id`) REFERENCES `barang` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================
+-- TABEL USERS
+-- ============================================
+CREATE TABLE `users` (
+  `id_user` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `level` enum('admin','staff') NOT NULL DEFAULT 'staff',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_user`),
+  UNIQUE KEY `users_username_unique` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABEL MIGRATIONS
+-- ============================================
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
